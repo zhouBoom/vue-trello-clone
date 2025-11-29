@@ -11,6 +11,9 @@
       <span class="icon icon-edit" @click="edit">
         <i class="fas fa-edit"></i>
       </span>
+      <span class="icon icon-delete" @click="remove">
+        <i class="fas fa-trash"></i>
+      </span>
     </div>
     <div>
       <p class="item-title">{{ item.title }}</p>
@@ -21,6 +24,8 @@
 </template>
 
 <script>
+import { format } from 'date-fns'
+import CardService from '@/services/CardService'
 
 export default {
   props: {
@@ -30,76 +35,82 @@ export default {
   computed: {
     classes () {
       return {
-        'is-due': this.isDue,
-        'is-overdue': this.isOverdue,
+        'card-overdue': this.isOverdue,
+        'card-due': this.isDue,
       }
     },
-
     timestamp () {
-      return Number(new Date(this.item.date))
+      return this.item.date ? format(this.item.date, 'MMM D, YYYY') : ''
     },
-
     isOverdue () {
-      return this.timestamp && this.timestamp < Date.now()
+      return this.item.date && this.item.date < new Date()
     },
-
     isDue () {
-      const date = this.timestamp
-      const due = date - (1000 * 60 * 60 * 24) * 3
-      const now = Date.now()
-      return date > now && now > due
-    },
+      return this.item.date && this.item.date >= new Date()
+    }
   },
 
   methods: {
     edit () {
       this.$emit('edit', this.item)
+    },
+    remove () {
+      if (confirm('确定要删除这个卡片吗？')) {
+        CardService.deleteCard(this.item.id)
+        this.$emit('delete', this.item)
+      }
     }
   }
 }
-
 </script>
 
 <style lang="scss" scoped>
-  .card {
-    position: relative;
-    border-radius: 3px;
-    cursor: default;
-  }
+.card {
+  position: relative;
+  border-radius: 3px;
+  cursor: default;
+}
 
-  .item-description {
-    font-size: 0.7em;
-  }
+.item-description {
+  font-size: 0.7em;
+}
 
-  .icons {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    cursor: pointer;
-  }
+.icons {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+}
 
-  .is-overdue {
-    color: red;
-    border: 1px solid red;
-  }
+.is-due {
+  border: 1px solid yellow;
+}
 
-  .card:hover {
-    .icon-due,
-    .icon-date {
-      display: none;
-    }
-  }
+.is-overdue {
+  border: 1px solid red;
+}
 
-  .icon-edit,
+.card:hover {
+  .icon-due,
   .icon-date {
-    color: #DDD;
-  }
-
-  .icon-edit {
     display: none;
-    margin-right: -5px;
-    .card:hover & {
-      display: block;
-    }
   }
+}
+
+.icon-edit,
+.icon-date {
+  color: #DDD;
+}
+
+.icon-edit {
+  display: none;
+  margin-right: -5px;
+  .card:hover & {
+    display: block;
+  }
+}
+
+.icon-delete {
+  color: #ff3860;
+}
 </style>

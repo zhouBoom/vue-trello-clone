@@ -31,7 +31,7 @@
                 @drop="e => onCardDrop(e, list, listIndex)"
               >
                 <Draggable v-for="item in list.items" :key="item.id">
-                  <Card :item="item" @edit="editItem"/>
+                  <Card :item="item" @edit="editItem" @delete="deleteItem"/>
                 </Draggable>
 
               </Container>
@@ -72,11 +72,15 @@
 
 <script>
 import { Container, Draggable } from 'vue-smooth-dnd'
+import ListService from '@/services/ListService'
+import CardService from '@/services/CardService'
 
 import Card from './Card'
 import UiItemForm from '../ui/UiItemForm'
 import UiItemEntry from '../ui/UiItemEntry'
 import { makeDropHandler } from '../../utils/plugins'
+const listService = new ListService()
+const cardService = new CardService()
 
 export default {
   components: {
@@ -85,6 +89,11 @@ export default {
     UiItemEntry,
     UiItemForm,
     Card,
+  },
+
+  setup() {
+    const boardStore = useBoardStore()
+    return { boardStore }
   },
 
   data: function () {
@@ -96,13 +105,18 @@ export default {
 
   computed: {
     lists () {
-      return this.$store.state.board.lists
+      return ListService.getLists()
     }
   },
 
   methods: {
+    deleteItem (item) {
+      const listId = this.lists.find(list => list.items.includes(item.id)).id
+      ListService.removeItemFromList(listId, item.id)
+      CardService.deleteCard(item.id)
+    },
     onAddList ({ text }) {
-      this.$store.commit('addList', { title: text })
+      ListService.createList(text)
       this.$nextTick(() => {
         const lists = this.$refs.list
         lists[lists.length - 1]
@@ -123,13 +137,14 @@ export default {
 
     onAddFullItem (item) {
       item.id
-        ? this.$store.commit('updateItem', { itemId: item.id, ...item })
+        ? CardService.updateCard(item)
         : this.addItem(this.activeListId, item.title, item.description, item.date)
       this.hideModal()
     },
 
     addItem (listId, title, description, date) {
-      this.$store.commit('addItem', { listId, title, description, date })
+      const card = CardService.createCard(title, description, date)
+      ListService.addItemToList(listId, card)
     },
 
     editItem (item) {
@@ -139,18 +154,16 @@ export default {
     onListDrop: makeDropHandler('onListDropComplete'),
 
     onListDropComplete: function (src, trg) {
-      this.$store.commit('moveList', [src.index, trg.index])
+      ListService.moveList(src.index, trg.index)
     },
 
     onCardDrop: makeDropHandler('onCardDropComplete'),
 
     onCardDropComplete (src, trg, element, payload) {
-      this.$store.commit('moveItem', [
-        src.params[1],
-        src.index,
-        trg.params[1],
-        trg.index,
-      ])
+      const fromListId = this.lists[src.params[1]].id
+      const toListId = this.lists[trg.params[1]].id
+      const item = this.lists[src.params[1]].items[src.index]
+      ListService.moveItemBetweenLists(fromListId, src.index, toListId, trg.index, item)
     },
 
     showModal (item) {
@@ -174,9 +187,10 @@ export default {
 
     reset () {
       if (confirm('Are you sure you want to reset the board?')) {
-        this.$store.commit('reset')
+        localStorage.removeItem(ListService.STORAGE_KEY)
+        localStorage.removeItem(CardService.STORAGE_KEY)
       }
-    },
+    }
   }
 }
 </script>

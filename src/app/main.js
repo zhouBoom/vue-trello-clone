@@ -1,11 +1,15 @@
 import Vue from 'vue'
 import VeeValidate from 'vee-validate'
 import 'bulma'
+import { createPinia, PiniaVuePlugin } from 'pinia'
 
 import App from './App.vue'
-import store from './state'
+import { useCardTemplateStore } from './state/index'
 
-import 'styles/index.scss'
+// 使用Pinia Vue插件
+Vue.use(PiniaVuePlugin)
+const pinia = createPinia()
+
 import 'core/ui'
 
 // config
@@ -16,12 +20,12 @@ Vue.use(VeeValidate)
 
 // application
 const app = new Vue({
-  store,
+  pinia,
   render: h => h(App)
 }).$mount('#app')
 
 // debugging
 if (process.env.NODE_ENV === 'development') {
   window.app = app
-  window.store = store
+  window.cardTemplateStore = useCardTemplateStore(pinia)
 }
