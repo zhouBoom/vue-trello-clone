@@ -5,6 +5,9 @@
       <div class="clear-button">
         <ui-button :disabled="lists.length === 0" @click="reset">Reset</ui-button>
       </div>
+      <div class="template-button">
+        <ui-button type="primary" @click="openTemplateModal">模板管理</ui-button>
+      </div>
 
       <div class="lists-container">
 
@@ -65,6 +68,11 @@
                   @submit="onAddFullItem"
                   @cancel="hideModal"/>
     </ui-modal>
+    
+    <!-- 模板管理模态框 -->
+    <ui-modal :active="templateModalActive" :cancellable="1" @close="closeTemplateModal">
+      <UiTemplateList/>
+    </ui-modal>
 
   </div>
 
@@ -76,6 +84,7 @@ import { Container, Draggable } from 'vue-smooth-dnd'
 import Card from './Card'
 import UiItemForm from '../ui/UiItemForm'
 import UiItemEntry from '../ui/UiItemEntry'
+import UiTemplateList from '../ui/UiTemplateList'
 import { makeDropHandler } from '../../utils/plugins'
 
 export default {
@@ -85,12 +94,14 @@ export default {
     UiItemEntry,
     UiItemForm,
     Card,
+    UiTemplateList,
   },
 
   data: function () {
     return {
       modal: false,
       activeListId: null,
+      templateModalActive: false,
     }
   },
 
@@ -101,6 +112,14 @@ export default {
   },
 
   methods: {
+    openTemplateModal() {
+      this.templateModalActive = true
+    },
+    
+    closeTemplateModal() {
+      this.templateModalActive = false
+    },
+    
     onAddList ({ text }) {
       this.$store.commit('addList', { title: text })
       this.$nextTick(() => {
@@ -257,5 +276,29 @@ export default {
     position: absolute;
     top: 20px;
     right: 20px;
+  }
+  
+  .template-button {
+    position: absolute;
+    top: 20px;
+    right: 100px;
+  }
+
+  .template-button .button {
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 6px;
+    background-color: #0079bf;
+    border-color: #0079bf;
+    color: #fff;
+    transition: all 0.2s ease;
+  }
+
+  .template-button .button:hover {
+    background-color: #006aa8;
+    border-color: #006aa8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 </style>

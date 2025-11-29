@@ -3,6 +3,17 @@
   <div class="query-form card">
     <div class="card-content">
       <h2 class="title">New task</h2>
+      
+      <!-- 模板选择区域 -->
+      <div class="template-select" v-if="templates.length > 0">
+        <label class="label">选择模板</label>
+        <div class="select">
+          <select v-model="selectedTemplateId" @change="applyTemplate">
+            <option value="">请选择模板</option>
+            <option v-for="template in templates" :key="template.id" :value="template.id">{{ template.title }}</option>
+          </select>
+        </div>
+      </div>
       <ui-input name="title"
                 label="Title"
                 v-model="title"
@@ -39,6 +50,7 @@ function data () {
     description: '',
     date: null,
     message: '',
+    selectedTemplateId: '',
   }
 }
 
@@ -50,13 +62,29 @@ export default {
   computed: {
     values () {
       return this.$data
-    }
+    },
+    
+    templates() {
+      return this.$store.getters.getAllTemplates
+    },
   },
 
   methods: {
     show (data) {
       Object.assign(this, data)
+      this.selectedTemplateId = ''
       this.$el.querySelector('input').focus()
+    },
+    
+    applyTemplate() {
+      if (this.selectedTemplateId) {
+        const template = this.$store.getters.getTemplateById(this.selectedTemplateId)
+        if (template) {
+          this.title = template.title
+          this.description = template.description
+          // 可以在这里处理标签，但当前表单没有标签字段
+        }
+      }
     },
 
     validate () {

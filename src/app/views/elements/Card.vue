@@ -2,7 +2,7 @@
 
   <div class="card" :class="classes" :data-id="item.id">
     <div class="icons">
-      <span v-if="isDue" class="icon icon-due has-text-warning" :title="`Item is due on ${item.date}`">
+      <span v-if="isDueSoon" class="icon icon-due has-text-warning" :title="`Item is due on ${item.date}`">
         <i class="fas fa-star"></i>
       </span>
       <span v-else-if="timestamp" class="icon icon-date" :title="`Item is due on ${item.date}`">
@@ -30,7 +30,7 @@ export default {
   computed: {
     classes () {
       return {
-        'is-due': this.isDue,
+        'is-due-soon': this.isDueSoon,
         'is-overdue': this.isOverdue,
       }
     },
@@ -43,9 +43,9 @@ export default {
       return this.timestamp && this.timestamp < Date.now()
     },
 
-    isDue () {
+    isDueSoon () {
       const date = this.timestamp
-      const due = date - (1000 * 60 * 60 * 24) * 3
+      const due = date - (1000 * 60 * 60 * 24) // 24小时前
       const now = Date.now()
       return date > now && now > due
     },
@@ -82,6 +82,10 @@ export default {
     color: red;
     border: 1px solid red;
   }
+  
+  .is-due-soon {
+    border: 1px solid yellow;
+  }
 
   .card:hover {
     .icon-due,
@@ -93,6 +97,10 @@ export default {
   .icon-edit,
   .icon-date {
     color: #DDD;
+  }
+  
+  .icon-due {
+    color: yellow;
   }
 
   .icon-edit {
